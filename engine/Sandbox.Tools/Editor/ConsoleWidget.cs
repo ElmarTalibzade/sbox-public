@@ -1,6 +1,5 @@
 ﻿using Facepunch.ActionGraphs;
 using Microsoft.CodeAnalysis;
-using Sandbox.ActionGraphs;
 using System;
 using System.Text;
 
@@ -884,5 +883,5 @@ internal class ConsoleWidget : Widget
 	{
 		if ( EditorPreferences.ClearConsoleOnPlay )
 			ConsoleWidget.Instance?.Clear();
-		}
 	}
+}
