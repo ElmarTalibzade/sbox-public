@@ -10,13 +10,11 @@ namespace Sandbox.Engine;
 internal static class ErrorReporter
 {
 #if RETAIL
-	internal static bool IsUsingSentry => !Application.IsStandalone;
+	internal static bool IsUsingSentry => !Application.IsStandalone && !Application.IsUnitTest;
 	internal static string ManagedDsn => "https://4f8440da406da20cfc2834a214f2ffad@o13219.ingest.sentry.io/5715364";
-	internal static string NativeDsn => "https://b8f6da00ab5f669a54ad4716692c68c7@o13219.ingest.sentry.io/5730657";
 #else
 	internal static bool IsUsingSentry => false;
 	internal static string ManagedDsn => null;
-	internal static string NativeDsn => null;
 #endif
 
 	public static void Initialize()
