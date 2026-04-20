@@ -6,7 +6,7 @@ using System.Text;
 namespace Editor;
 
 [Dock( "Editor", "Console", "text_snippet" )]
-internal class ConsoleWidget : Widget
+internal sealed class ConsoleWidget : Widget
 {
 	private static ConsoleWidget _instance;
 	internal static ConsoleWidget Instance
