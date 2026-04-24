@@ -177,7 +177,7 @@ public sealed class VideoWriter : IDisposable
 		var audioChannels = 2;
 
 		native = CVideoRecorder.Create();
-		native.Initialize( this.path, width, height, frameRate, bitrate, audioSampleRate, audioChannels, config.CodecName, (int)config.Preset, config.AudioCodecName, config.Transparency );
+		native.Initialize( this.path, width, height, frameRate, bitrate, audioSampleRate, audioChannels, config.CodecName, config.ContainerName, (int)config.Preset, config.AudioCodecName, config.Transparency );
 	}
 
 	~VideoWriter()
