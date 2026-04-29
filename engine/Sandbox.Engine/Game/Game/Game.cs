@@ -83,7 +83,7 @@ public static partial class Game
 	/// <summary>
 	/// Return true if we're running on a handheld device (the deck). Will always be false serverside.
 	/// </summary>
-	public static bool IsRunningOnHandheld { get; internal set; }
+	public static bool IsRunningOnHandheld => Steamworks.SteamClient.IsValid && Steamworks.SteamUtils.IsRunningOnSteamDeck;
 
 	/// <summary>
 	/// A shared random that is automatically seeded on tick
@@ -160,10 +160,15 @@ public static partial class Game
 
 		LaunchArguments.Reset();
 
-		// Standalone mode and Dedicated Server only: exit whole app
 		if ( Application.IsStandalone || Application.IsDedicatedServer )
 		{
+			// exit whole app
 			Application.Exit();
+		}
+		else
+		{
+			// return to menu
+			IMenuDll.Current?.OnGameExited();
 		}
 	}
 

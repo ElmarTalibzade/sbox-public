@@ -48,6 +48,7 @@ internal partial class PanelRenderer
 		public Rect Rect;
 		public Vector4 CornerRadius;
 		public Matrix Matrix;
+		public bool Invert;
 	}
 
 	/// <summary>
@@ -64,7 +65,7 @@ internal partial class PanelRenderer
 		{
 			_disposed = true;
 
-			var renderer = GlobalContext.Current.UISystem.Renderer.Value;
+			var renderer = GlobalContext.Current.UISystem.Renderer;
 
 			Previous = renderer.Scissor;
 			PreviousGPU = renderer.ScissorGPU;
@@ -104,7 +105,7 @@ internal partial class PanelRenderer
 			if ( !_disposed ) return;
 			_disposed = false;
 
-			var renderer = GlobalContext.Current.UISystem.Renderer.Value;
+			var renderer = GlobalContext.Current.UISystem.Renderer;
 			renderer.Scissor = Previous;
 			renderer.ScissorGPU = PreviousGPU;
 		}

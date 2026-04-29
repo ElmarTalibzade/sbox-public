@@ -5,13 +5,8 @@
 @namespace Sandbox.UI
 @inherits Panel
 
-<root class=@BuildClass() onmouseup=@ShowGameModal>
-    <div class="image" style="background-image: url(@(Image() ?? "/ui/sbox-logo-square.svg"))">
-        @if ( Size == SizeTypes.List )
-        {
-            <icon class="play">play_arrow</icon>
-        }
-    </div>
+<root class=@BuildClass() onclick=@ShowGameModal onrightclick=@ShowGameMenu>
+    <div class="image" style="background-image: url(@(Image() ?? "/ui/sbox-logo-square.svg"))" />
 
     <column>
         <label class="medium package-title">
@@ -57,8 +52,7 @@
         Default,
         Small,
         Wide,
-        Tall,
-        List
+        Tall
     }
 
     [Property] public Sandbox.Package Package { get; set; }
@@ -67,6 +61,11 @@
     private void ShowGameModal()
     {
         Package?.OpenModal();
+    }
+
+    private void ShowGameMenu()
+    {
+        MenuHelpers.OpenPackageMenu(this, Package);
     }
 
     private string BuildClass()
@@ -88,8 +87,6 @@
     {
         switch (Size)
         {
-            case SizeTypes.List:
-                return Package?.Thumb;
             case SizeTypes.Tall:
                 return Package?.ThumbTall;
             case SizeTypes.Wide:

@@ -3,12 +3,14 @@ $background-size: 8px;
 
 GameCard {
     flex-shrink: 0;
+
+    &:hover { sound-in: "ui.button.over"; }
+    &:active { sound-in: "ui.button.press"; }
     flex-direction: column;
     position: relative;
     background-color: rgba( $default-950, 0 );
     border-radius: $rounding-default;
     transition: all 150ms ease;
-    flex-shrink: 0;
     cursor: pointer;
     z-index: 0;
     height: 200px;
@@ -19,6 +21,9 @@ GameCard {
         transition: all 150ms ease;
         border: 1px solid rgba( white, 0.025 );
         aspect-ratio: 16 / 9;
+        background-position: center;
+        background-size: cover;
+        border-radius: $rounding-small;
     }
 
     column {
@@ -26,22 +31,37 @@ GameCard {
     }
 
     &.list {
-        width: 400px;
+        flex-grow: 1;
         height: 64px;
+        flex-direction: row;
+        gap: 12px;
 
         .inner column {
             flex-grow: 1;
         }
 
         .image {
-            height: 64px;
+            height: 100%;
             aspect-ratio: 1;
-            mask: linear-gradient( to right, white, black );
+            flex-grow: 0;
+            flex-shrink: 0;
         }
 
         column {
             gap: 3px;
             justify-content: center;
+        }
+
+        .package-title {
+            flex-shrink: 0;
+            max-width: 500px;
+        }
+
+        .package-users {
+            position: absolute;
+            top: 1px;
+            right: 713px;
+            text-align: right;
         }
     }
 
@@ -86,17 +106,13 @@ GameCard {
         font-size: 14px;
     }
 
-    .package-users {
-        position: absolute;
-        top: 4px;
-        right: 3px;
-        transition: all 150ms ease;
-    }
-
-    .image {
-        background-position: center;
-        background-size: cover;
-        border-radius: $rounding-small;
+    &:not(.list) {
+        .package-users {
+            position: absolute;
+            top: 4px;
+            right: 3px;
+            transition: all 150ms ease;
+        }
     }
 
     .play-button {
@@ -132,7 +148,7 @@ GameCard {
         transition: all 150ms ease;
         z-index: -10;
         border-radius: $rounding-large;
-        pointer-events: all;
+        pointer-events: none;
     }
 
     &:hover {

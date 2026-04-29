@@ -27,21 +27,26 @@
             <Button Href="/maps/all" Icon="map">#menu.maps</Button>
             <Button Href="/multiplayer" Icon="view_list">#menu.multiplayer</Button>
         </div>
-
+        
         <div class="right">
             <Button @onmouseup=@OpenAvatarScene Icon="emoji_people">#menu.avatar</Button>
-            <Button Href="/itemstore" class="unread" Icon="store">#menu.store</Button>
+
+            <span class="store-wrapper">
+                <FeaturedStoreItem />
+                <Button Href="/itemstore" class="unread" Icon="store">#menu.store</Button>
+            </span>
 
             <separator class="vertical" />
 
             <NotificationButton />
-            <Button onmouseup="@Settings" Icon="settings"></Button>
+            <Button @onmouseup=@Settings Icon="settings"></Button>
 
-            <Button onmouseup="@Quit" class="close" Icon="close"></Button>
+            <Button onmouseup="@Quit" class="close" Icon="power_settings_new"></Button>
         </div>
 
-        <FeaturedStoreItem />
     </div>
+
+    <MainSearchBar />
 </root>
 
 @code {
@@ -60,7 +65,7 @@
     void OpenAvatarScene()
     {
         var options = new SceneLoadOptions();
-        options.ShowLoadingScreen = false;
+        options.ShowLoadingScreen = true;
         options.SetScene("/scenes/avatar.scene");
 
         Game.ActiveScene.Load(options);
