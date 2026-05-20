@@ -16,7 +16,8 @@ public partial class Scene : GameObject
 
 		if ( trace.NeedsFilterCallback )
 		{
-			trace.PhysicsTrace.filterCallback = trace.FilterCallback;
+			SceneTrace.SetTraceFilter( in trace );
+			trace.PhysicsTrace.filterCallback = SceneTrace.PhysicsFilterCallback;
 		}
 
 		if ( trace.IncludePhysicsWorld )
@@ -33,7 +34,7 @@ public partial class Scene : GameObject
 		if ( trace.IncludeRenderMeshes && SceneWorld is not null )
 		{
 			var mt = Engine.Utility.RayTrace.MeshTraceRequest.From( trace.PhysicsTrace.request, SceneWorld, trace.CullMode );
-			mt.filterCallback = trace.NeedsFilterCallback ? trace.FilterCallback : default;
+			mt.filterCallback = trace.NeedsFilterCallback ? SceneTrace.MeshFilterCallback : default;
 			var meshTraceResults = mt.RunAll();
 
 			foreach ( var meshTraceResult in meshTraceResults )
@@ -53,6 +54,7 @@ public partial class Scene : GameObject
 			}
 		}
 
+		SceneTrace.ClearTraceFilter();
 		return results.OrderBy( r => r.Fraction );
 	}
 
@@ -66,7 +68,8 @@ public partial class Scene : GameObject
 
 		if ( trace.NeedsFilterCallback )
 		{
-			trace.PhysicsTrace.filterCallback = trace.FilterCallback;
+			SceneTrace.SetTraceFilter( in trace );
+			trace.PhysicsTrace.filterCallback = SceneTrace.PhysicsFilterCallback;
 		}
 
 		if ( trace.IncludePhysicsWorld )
@@ -78,7 +81,7 @@ public partial class Scene : GameObject
 		if ( trace.IncludeRenderMeshes && SceneWorld is not null )
 		{
 			var mt = Engine.Utility.RayTrace.MeshTraceRequest.From( trace.PhysicsTrace.request, SceneWorld, trace.CullMode );
-			mt.filterCallback = trace.NeedsFilterCallback ? trace.FilterCallback : default;
+			mt.filterCallback = trace.NeedsFilterCallback ? SceneTrace.MeshFilterCallback : default;
 			var meshTraceResult = mt.Run();
 			if ( meshTraceResult.Hit )
 			{
@@ -100,6 +103,8 @@ public partial class Scene : GameObject
 			}
 		}
 
+		SceneTrace.ClearTraceFilter();
+
 		if ( bestResult.Fraction < 2 )
 			return bestResult;
 
@@ -114,7 +119,7 @@ public partial class Scene : GameObject
 			HitPosition = trace.PhysicsTrace.request.EndPos,
 			Fraction = 1,
 			Direction = (trace.PhysicsTrace.request.EndPos - trace.PhysicsTrace.request.StartPos).Normal,
-			Tags = default
+			_rawTags = default
 		};
 	}
 
@@ -314,6 +319,36 @@ public partial struct SceneTrace
 	{
 		var t = this;
 		t.PhysicsTrace = PhysicsTrace.Cylinder( height, radius, ray, distance );
+		return t;
+	}
+
+	/// <summary>
+	/// Casts a cone (base at bottom, apex at top).
+	/// </summary>
+	public readonly SceneTrace Cone( float height, float baseRadius )
+	{
+		var t = this;
+		t.PhysicsTrace = PhysicsTrace.Cone( height, baseRadius );
+		return t;
+	}
+
+	/// <summary>
+	/// Casts a cone from point A to point B.
+	/// </summary>
+	public SceneTrace Cone( float height, float baseRadius, in Vector3 from, in Vector3 to )
+	{
+		var t = this;
+		t.PhysicsTrace = PhysicsTrace.Cone( height, baseRadius, from, to );
+		return t;
+	}
+
+	/// <summary>
+	/// Casts a cone from a given position and direction, up to a given distance.
+	/// </summary>
+	public SceneTrace Cone( float height, float baseRadius, in Ray ray, in float distance )
+	{
+		var t = this;
+		t.PhysicsTrace = PhysicsTrace.Cone( height, baseRadius, ray, distance );
 		return t;
 	}
 
@@ -665,11 +700,31 @@ public partial struct SceneTrace
 		return scene.RunTraceAll( this );
 	}
 
+	// Cached delegates and per-trace filter state to avoid boxing SceneTrace struct
+	internal static readonly Func<PhysicsShape, bool> PhysicsFilterCallback = FilterCallbackPhysicsShape;
+	internal static readonly Func<SceneObject, bool> MeshFilterCallback = FilterCallbackSceneObject;
+
+	[ThreadStatic] static ImmutableArray<GameObject> _traceIgnoreSingle;
+	[ThreadStatic] static ImmutableArray<GameObject> _traceIgnoreHierarchy;
+
+	internal static void SetTraceFilter( in SceneTrace trace )
+	{
+		_traceIgnoreSingle = trace.IgnoreSingleObject;
+		_traceIgnoreHierarchy = trace.IgnoreHierarchy;
+	}
+
+	internal static void ClearTraceFilter()
+	{
+		_traceIgnoreSingle = default;
+		_traceIgnoreHierarchy = default;
+	}
+
+
 	/// <summary>
 	/// Return true if we should hit this shape.
 	/// We purposely keep this locked down, don't offer a user specified callback.
 	/// </summary>
-	internal readonly bool FilterCallback( PhysicsShape shape )
+	static bool FilterCallbackPhysicsShape( PhysicsShape shape )
 	{
 		var colliderObject = shape.Collider?.GameObject;
 		var bodyObject = shape.Body?.GameObject;
@@ -678,46 +733,46 @@ public partial struct SceneTrace
 		// Check both collider and body GameObjects.
 		// The user might ignore either one.
 		//
-		if ( colliderObject != null && IgnoreSingleObject.Contains( colliderObject ) )
+		if ( colliderObject != null && _traceIgnoreSingle.Contains( colliderObject ) )
 			return false;
 
-		if ( bodyObject != null && bodyObject != colliderObject && IgnoreSingleObject.Contains( bodyObject ) )
+		if ( bodyObject != null && bodyObject != colliderObject && _traceIgnoreSingle.Contains( bodyObject ) )
 			return false;
 
 		//
 		// Prefer the collider GameObject.
 		// Fall back to body if needed.
 		//
-		return FilterCallback( colliderObject ?? bodyObject );
+		return FilterCallbackGameObject( colliderObject ?? bodyObject );
 	}
 
 	/// <summary>
 	/// Return true if we should hit this sceneobject.
 	/// We purposely keep this locked down, don't offer a user specified callback.
 	/// </summary>
-	internal readonly bool FilterCallback( SceneObject so )
+	static bool FilterCallbackSceneObject( SceneObject so )
 	{
 		var go = so.GameObject;
 
 		//
 		// Ignore this object directly
 		//
-		if ( IgnoreSingleObject.Contains( go ) )
+		if ( _traceIgnoreSingle.Contains( go ) )
 			return false;
 
-		return FilterCallback( go );
+		return FilterCallbackGameObject( go );
 	}
 
-	readonly bool FilterCallback( GameObject go )
+	static bool FilterCallbackGameObject( GameObject go )
 	{
 		if ( go is null ) return true;
 
 		//
 		// Ignore anything under a hierarchy we're skipping
 		//
-		for ( int i = 0; i < IgnoreHierarchy.Length; i++ )
+		for ( int i = 0; i < _traceIgnoreHierarchy.Length; i++ )
 		{
-			if ( go.IsAncestor( IgnoreHierarchy[i] ) )
+			if ( go.IsAncestor( _traceIgnoreHierarchy[i] ) )
 				return false;
 		}
 
@@ -827,10 +882,18 @@ public struct SceneTraceResult
 	public int Triangle;
 
 	/// <summary>
-	/// The tags that the hit shape had
+	/// Returns true if the hit shape has this tag.
 	/// </summary>
-	[ActionGraphInclude, ReadOnly, Group( "Hit Object" )]
-	public string[] Tags;
+	public readonly bool HasTag( StringToken tag ) => _rawTags.Contains( tag.Value );
+
+	/// <summary>
+	/// The tags that the hit shape had.
+	/// </summary>
+	[Obsolete( "Use HasTag instead." ), ActionGraphInclude, ReadOnly, Group( "Hit Object" )]
+	public readonly string[] Tags => _rawTags.Count == 0 ? Array.Empty<string>() : _rawTags.ToStringArray();
+
+	// Raw token IDs stored inline, allocation free
+	internal TagBuffer16 _rawTags;
 
 	/// <summary>
 	/// The hitbox that we hit
@@ -864,7 +927,7 @@ public struct SceneTraceResult
 			Bone = r.Bone,
 			Direction = r.Direction,
 			Triangle = r.Triangle,
-			Tags = r.Tags,
+			_rawTags = r._rawTags,
 			GameObject = r.Body?.GameObject,
 			Component = r.Body?.Component,
 			Collider = r.Shape?.Collider,
@@ -876,6 +939,14 @@ public struct SceneTraceResult
 
 	public static SceneTraceResult From( in Scene scene, in Engine.Utility.RayTrace.MeshTraceRequest.Result r )
 	{
+		var rawTags = new TagBuffer16();
+		var sceneTags = r.SceneObject.Tags.TryGetAll();
+		if ( sceneTags is not null )
+		{
+			foreach ( var tag in sceneTags )
+				rawTags.AddUnique( ((StringToken)tag).Value );
+		}
+
 		var result = new SceneTraceResult
 		{
 			Scene = scene,
@@ -892,7 +963,7 @@ public struct SceneTraceResult
 			Bone = default,
 			Direction = (r.EndPosition - r.StartPosition).Normal,
 			Triangle = r.HitTriangle,
-			Tags = r.SceneObject.Tags.TryGetAll().ToArray(),
+			_rawTags = rawTags,
 			GameObject = r.SceneObject.GameObject,
 			Component = r.SceneObject.Component
 		};

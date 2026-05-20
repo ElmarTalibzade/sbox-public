@@ -13,13 +13,13 @@ public class PackageDto
 	public DateTimeOffset Updated { get; set; }
 	public DateTimeOffset Created { get; set; }
 	public PackageUsageStats UsageStats { get; set; }
+	public long UsersNow { get; set; }
 	public PackageReviewStats ReviewStats { get; set; }
 	public string[] Tags { get; set; }
 	public int Favourited { get; set; }
 	public int VotesUp { get; set; }
 	public int VotesDown { get; set; }
 	public PackageVersion Version { get; set; }
-	public string Source { get; set; }
 	public bool Public { get; set; }
 	public bool Archive { get; set; }
 	public int ApiVersion { get; set; }
@@ -71,6 +71,21 @@ public class PackageDto
 		// as a struct incase we want to add more info to the loading screen
 		// like allowing them to add titles or something. Stop short at uploading a screenshot or video for now.
 	}
+
+	/// <summary>
+	/// The amount of times this has been spawned
+	/// </summary>
+	public long Spawns { get; set; }
+
+	/// <summary>
+	/// The amount of players that have spawned this
+	/// </summary>
+	public long PlayerSpawns { get; set; }
+
+	/// <summary>
+	/// The total size of this package in bytes
+	/// </summary>
+	public long FileSize { get; set; }
 
 	public string DevLink( string append = "/" )
 	{

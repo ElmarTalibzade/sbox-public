@@ -69,8 +69,7 @@ internal sealed class RemotePackage : Package
 		{
 			Usage = new PackageUsageStats
 			{
-				UsersNow = p.UsageStats.UsersNow,
-				Trend = p.UsageStats.Trend,
+				UsersNow = p.UsersNow,
 
 				Total = new PackageUsageStats.Group
 				{
@@ -100,7 +99,6 @@ internal sealed class RemotePackage : Package
 		Favourited = p.Favourited;
 		VotesUp = p.VotesUp;
 		VotesDown = p.VotesDown;
-		Source = p.Source;
 		Public = p.Public;
 		ApiVersion = p.ApiVersion;
 		Screenshots = p.Screenshots?.Select( x => new Screenshot { Created = x.Created, Height = x.Height, IsVideo = x.IsVideo, Thumb = x.Thumb, Url = x.Url, Width = x.Width } ).ToArray() ?? Array.Empty<Screenshot>();
@@ -114,11 +112,7 @@ internal sealed class RemotePackage : Package
 			LatestNewsPost = Sandbox.Services.News.From( newsPost );
 		}
 
-		if ( p.ReviewStats is { } reviews )
-		{
-			Reviews = new ReviewStats( (int)reviews.Count, reviews.ToPercentage() );
-		}
-
+		Reviews = new ReviewStats( p.ReviewStats );
 		_data = p.Data;
 
 		Interaction = new PackageInteraction
@@ -153,8 +147,7 @@ internal sealed class RemotePackage : Package
 		{
 			Usage = new PackageUsageStats
 			{
-				UsersNow = p.UsageStats.UsersNow,
-				Trend = p.UsageStats.Trend,
+				UsersNow = p.UsersNow,
 
 				Total = new PackageUsageStats.Group
 				{

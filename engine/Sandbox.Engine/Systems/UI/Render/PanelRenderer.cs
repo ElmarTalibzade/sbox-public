@@ -1,4 +1,4 @@
-using Sandbox.Rendering;
+﻿using Sandbox.Rendering;
 
 namespace Sandbox.UI;
 
@@ -99,6 +99,7 @@ internal sealed partial class PanelRenderer
 		public int DrawCalls;
 		public int InstanceCount;
 		public int FlushCount;
+		public int FrameGrabs;
 		public int ScissorCount;
 		public int GpuBufferCount;
 
