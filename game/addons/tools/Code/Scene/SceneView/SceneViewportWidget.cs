@@ -215,7 +215,7 @@ public partial class SceneViewportWidget : Widget
 			Renderer.Camera = _activeCamera;
 		}
 
-		_activeCamera.BackgroundColor = "#32415e";
+		_activeCamera.BackgroundColor = EditorPreferences.CameraBackgroundColor;
 		_activeCamera.WorldPosition = State.CameraPosition;
 		_activeCamera.WorldRotation = State.CameraRotation;
 
@@ -773,6 +773,7 @@ public partial class SceneViewportWidget : Widget
 				ViewMode.Top2d => new Vector2( size.x, size.y ),
 				ViewMode.Front2d => new Vector2( size.y, size.z ),
 				ViewMode.Side2d => new Vector2( size.z, size.x ),
+				ViewMode.Flat2d => new Vector2( size.x, size.y ),
 				_ => new Vector2( size.x, size.y )
 			};
 
